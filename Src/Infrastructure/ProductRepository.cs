@@ -1,6 +1,9 @@
 using Dapper;
 using Cart.Domain;
+using System;
 using Cart.Domain.Repositories;
+using Newtonsoft.Json;
+using Cart.Application.DTOs;
 
 namespace Cart.Infrastructure;
 
@@ -12,12 +15,18 @@ public class ProductRepository : IProductRepository
 
     public async ValueTask<Product> GetProduct(int id)
     {
-        var query = "SELECT * FROM PRODUCTS WHERE Id = @id";
+        var query = "SELECT Name,Description,Quantity,Slug,attachments FROM PRODUCTS WHERE Id = @id";
         using (var connection = context.CreateConnection())
         {
-            var product = await connection.QueryFirstOrDefaultAsync<Product>(query, new { id });
-            return product;
-        }
+            var product = await connection.QueryFirstOrDefaultAsync<CreateEditProductDto>(query, new { id });
+        return new Product()
+        {
+            Name = product.Name,
+            Description = product.Description,
+            Quantity = product.Quantity,
+            Slug = product.Slug,
+            Attachments = JsonConvert.DeserializeObject<List<Product.Attachment>>(product.Attachments)
+        };
     }
 
     public async ValueTask<List<Product>> GetProducts()
