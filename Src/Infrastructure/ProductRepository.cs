@@ -19,14 +19,15 @@ public class ProductRepository : IProductRepository
         using (var connection = context.CreateConnection())
         {
             var product = await connection.QueryFirstOrDefaultAsync<CreateEditProductDto>(query, new { id });
-        return new Product()
-        {
-            Name = product.Name,
-            Description = product.Description,
-            Quantity = product.Quantity,
-            Slug = product.Slug,
-            Attachments = JsonConvert.DeserializeObject<List<Product.Attachment>>(product.Attachments)
-        };
+            return new Product()
+            {
+                Name = product.Name,
+                Description = product.Description,
+                Quantity = product.Quantity,
+                Slug = product.Slug,
+                Attachments = JsonConvert.DeserializeObject<List<Product.Attachment>>(product.Attachments)
+            };
+        }
     }
 
     public async ValueTask<List<Product>> GetProducts()
@@ -34,8 +35,8 @@ public class ProductRepository : IProductRepository
         var query = "SELECT * FROM PRODUCTS";
         using (var connection = context.CreateConnection())
         {
-            var products = await connection.QueryAsync<Product>(query);
-            return products.ToList();
+            var products = await connection.QueryAsync<CreateEditProductDto>(query);
+            return products.Select(product => new Product() { Name = product.Name , Description = product.Description , Quantity = product.Quantity , Attachments = JsonConvert.DeserializeObject<List<Product.Attachment>>(product.Attachments)}).ToList();
         }
     }
 
@@ -52,20 +53,26 @@ public class ProductRepository : IProductRepository
     public async ValueTask<int> AddProduct(Product product)
     {
         var query =
-            "INSERT INTO PRODUCTS(NAME,DESCRIPTION,QUANTITY,SLUG) VALUES(@Name,@Description,@Quantity,@Slug)";
+            "INSERT INTO PRODUCTS(NAME,DESCRIPTION,QUANTITY,SLUG,Attachments) VALUES(@Name,@Description,@Quantity,@Slug,@Attachments)";
         using (var connection = context.CreateConnection())
         {
-            int rowAffected = await connection.ExecuteAsync(query, product);
+            var slug = Guid.NewGuid().ToString();
+            var attachments = JsonConvert.SerializeObject(product.Attachments);
+            int rowAffected = await connection.ExecuteAsync(query, new
+            {
+                product.Name , product.Description , product.Quantity , slug , attachments  
+            });
             return rowAffected;
         }
     }
 
-    public async ValueTask UpdateProduct(int id, Product product)
+   public async ValueTask UpdateProduct(int id, Product product)
     {
         var query =
-            "UPDATE PRODUCTS SET NAME = @Name , DESCRIPTION = @Description , QUANTITY = @Quantity , SLUG = @Slug WHERE ID = @id";
+            "UPDATE PRODUCTS SET NAME = @Name , DESCRIPTION = @Description , QUANTITY = @Quantity , SLUG = @Slug , Attachments = @Attachments WHERE ID = @id";
         using (var connection = context.CreateConnection())
         {
+            var attachments = JsonConvert.SerializeObject(product.Attachments);
             await connection.ExecuteAsync(
                 query,
                 new
@@ -73,7 +80,9 @@ public class ProductRepository : IProductRepository
                     product.Name,
                     product.Description,
                     product.Quantity,
-                    product.Slug
+                    product.Slug,
+                    attachments,
+                    id
                 }
             );
         }

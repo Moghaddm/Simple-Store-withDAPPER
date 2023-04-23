@@ -25,15 +25,6 @@ public class ProductController : ControllerBase
         {
             if (product is null)
                 return BadRequest("Please Enter Product to ADD!");
-            var att = new List<CreateEditProductDto.Attachment>
-            {
-                new()
-                {
-                    Alt = product.Attachments.FirstOrDefault()!.Alt,
-                    FileName = product.Attachments.FirstOrDefault()!.FileName,
-                    Title = product.Attachments.FirstOrDefault()!.Title
-                }
-            };
             await products.InsertProduct(
                 new CreateEditProductDto()
                 {
@@ -41,7 +32,7 @@ public class ProductController : ControllerBase
                     Description = product.Description,
                     Quantity = product.Quantity,
                     Slug = product.Slug,
-                    Attachments = att
+                    Attachments = product.Attachments
                 }
             );
             return CreatedAtRoute(nameof(Get), new { id = product.Id }, product);

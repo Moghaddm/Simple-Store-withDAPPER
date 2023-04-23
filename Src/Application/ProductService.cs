@@ -1,4 +1,5 @@
 using Cart.Application.DTOs;
+using Cart.Application.Handlers;
 using Cart.Domain;
 using Cart.Domain.Repositories;
 
@@ -17,24 +18,7 @@ public class ProductService : IProductService
 
     public async Task<int> InsertProduct(CreateEditProductDto product)
     {
-        var att = new List<Product.Attachment>
-        {
-            new()
-            {
-                Alt = product.Attachments.FirstOrDefault()!.Alt,
-                FileName = product.Attachments.FirstOrDefault()!.FileName,
-                Title = product.Attachments.FirstOrDefault()!.Title
-            }
-        };
-        var productMustAdd = new Product
-        {
-            Name = product.Name,
-            Description = product.Description,
-            Quantity = product.Quantity,
-            Slug = product.Slug,
-            Attachments = att
-        };
-        var rowAffected = await productRepository.AddProduct(productMustAdd);
+        var rowAffected = await productRepository.AddProduct(new Product() { Name = product.Name, Description = product.Description, Quantity = product.Quantity, Slug = product.Slug, Attachments = ProductJsonHandler.Parse(product.Attachments) });
         return rowAffected;
     }
 
@@ -42,23 +26,13 @@ public class ProductService : IProductService
 
     public async Task UpdateProduct(int id, CreateEditProductDto product)
     {
-        var att = new List<Product.Attachment>
-        {
-            new()
-            {
-                Alt = product.Attachments.FirstOrDefault()!.Alt,
-                FileName = product.Attachments.FirstOrDefault()!.FileName,
-                Title = product.Attachments.FirstOrDefault()!.Title
-            }
-        };
-        var productMustEdit = new Product
+        await productRepository.UpdateProduct(id, new Product
         {
             Name = product.Name,
             Description = product.Description,
             Quantity = product.Quantity,
             Slug = product.Slug,
-            Attachments = att
-        };
-        await productRepository.UpdateProduct(id, productMustEdit);
+            Attachments = ProductJsonHandler.Parse(product.Attachments)
+        });
     }
 }
