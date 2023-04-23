@@ -7,7 +7,7 @@ public class CreateEditProductDto
     public string Description { get; set; }
     public int Quantity { get; set; }
     public string Slug { get; set; }
-    public List<Attachment> Attachments { get; set; }
+    public string Attachments { get; set; }
 
     public class Attachment
     {

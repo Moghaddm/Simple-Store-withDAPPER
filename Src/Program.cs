@@ -14,7 +14,7 @@ builder.Services.AddSwaggerGen();
 
 builder.Services.AddScoped<IProductService, ProductService>();
 builder.Services.AddScoped<IProductRepository, ProductRepository>();
-builder.Services.AddSingleton<StoreContext>();
+//builder.Services.AddSingleton<StoreContext>();
 
 var app = builder.Build();
 
